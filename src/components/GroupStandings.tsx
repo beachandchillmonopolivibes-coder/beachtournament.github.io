@@ -1,4 +1,5 @@
 import type { Group } from '../store/useTournamentStore';
+import TeamDisplayName from './TeamDisplayName';
 
 interface GroupStandingsProps {
   group: Group;
@@ -27,7 +28,7 @@ const GroupStandings = ({ group }: GroupStandingsProps) => {
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index < 2 ? 'bg-neon-orange text-[#0b0c10]' : 'bg-gray-800'}`}>
                     {index + 1}
                   </span>
-                  {team.name}
+                  <TeamDisplayName name={team.name} players={team.players} />
                 </td>
                 <td className="py-3 px-2 text-center font-bold text-neon-blue text-lg">
                   {team.points}

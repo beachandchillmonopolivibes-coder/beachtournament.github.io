@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import type { Match } from '../store/useTournamentStore';
 import { Plus, Minus, Check, Clock, Save, CalendarDays, Play } from 'lucide-react';
+import TeamDisplayName from './TeamDisplayName';
 
 interface LiveScoreProps {
   match: Match;
   team1Name: string;
+  team1Players?: string[];
   team2Name: string;
+  team2Players?: string[];
   groupName?: string;
   isAdmin: boolean;
   onUpdate: (matchId: string, team1Score: number[], team2Score: number[], isFinished: boolean, matchStatus: 'scheduled' | 'live' | 'finished') => Promise<void>;
   onScheduleUpdate?: (matchId: string, scheduledAt: string) => Promise<void>;
 }
 
-const LiveScore = ({ match, team1Name, team2Name, groupName, isAdmin, onUpdate, onScheduleUpdate }: LiveScoreProps) => {
+const LiveScore = ({ match, team1Name, team1Players, team2Name, team2Players, groupName, isAdmin, onUpdate, onScheduleUpdate }: LiveScoreProps) => {
   const [t1Score, setT1Score] = useState<number[]>([...match.team1Score]);
   const [t2Score, setT2Score] = useState<number[]>([...match.team2Score]);
   const [isFinished, setIsFinished] = useState(match.isFinished);
@@ -128,13 +131,15 @@ const LiveScore = ({ match, team1Name, team2Name, groupName, isAdmin, onUpdate, 
       )}
 
       <div className="flex flex-col gap-3">
-        {[team1Name, team2Name].map((teamName, teamIdx) => {
+        {[{name: team1Name, players: team1Players}, {name: team2Name, players: team2Players}].map((team, teamIdx) => {
             const isTeam1 = teamIdx === 0;
             const currentScores = isTeam1 ? t1Score : t2Score;
 
             return (
               <div key={teamIdx} className="flex justify-between items-center bg-[rgba(0,0,0,0.3)] p-2 rounded-lg">
-                <span className={`font-bold truncate w-[45%] ${isFinished ? 'text-gray-400' : 'text-white'}`}>{teamName}</span>
+                <div className={`w-[45%] ${isFinished ? 'opacity-50' : ''}`}>
+                    <TeamDisplayName name={team.name} players={team.players} className="truncate" />
+                </div>
                 <div className="flex items-center gap-2">
                    {currentScores.map((score, setIdx) => (
                       <div key={setIdx} className="flex items-center gap-1 bg-[#1f2833] rounded px-1 border border-gray-700">

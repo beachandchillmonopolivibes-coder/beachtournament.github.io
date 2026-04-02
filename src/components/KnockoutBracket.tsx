@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Match, Tournament } from '../store/useTournamentStore';
 import LiveScore from './LiveScore';
+import TeamDisplayName from './TeamDisplayName';
 import { useTournamentStore } from '../store/useTournamentStore';
 
 export function KnockoutBracket({ tournament, isAdmin, onScheduleUpdate }: { tournament: Tournament, isAdmin: boolean, onScheduleUpdate?: (matchId: string, scheduledTime: string) => Promise<void> }) {
@@ -28,18 +29,23 @@ export function KnockoutBracket({ tournament, isAdmin, onScheduleUpdate }: { tou
 
   const phases = ['round_16', 'quarter_finals', 'semi_finals', 'finals', 'third_place'].filter(p => bracketMatches.some(m => m.phaseType === p));
 
-  const getTeamDisplay = (teamId: string | null, matchId: string, slot: 'team1Id' | 'team2Id', isFirstPhase: boolean) => {
+  const getTeamDisplay = (teamId: string | null, matchId: string, slot: 'team1Id' | 'team2Id', isFirstPhase: boolean, returnRawObj: boolean = false): any => {
     if (!teamId) {
+        if (returnRawObj) return { name: 'TBD', players: [] };
         if (isAdmin && isFirstPhase) {
             return <button onClick={(e) => { e.stopPropagation(); setManualSelectData({matchId, slot}); }} className="text-[10px] bg-neon-blue/20 text-neon-blue hover:bg-neon-blue hover:text-[#0b0c10] px-2 py-1 rounded transition-colors">Seleziona Squadra</button>;
         }
-        return <span className="text-gray-500 italic">TBD</span>;
+        return <span className="text-gray-500 italic text-xs">TBD</span>;
     }
     for (const group of tournament.groups) {
       const team = group.teams.find(t => t.id === teamId);
-      if (team) return team.name;
+      if (team) {
+          if (returnRawObj) return team;
+          return <TeamDisplayName name={team.name} players={team.players} isKnockout={true} />;
+      }
     }
-    return <span className="text-gray-500 italic">TBD</span>;
+    if (returnRawObj) return { name: 'Team Sconosciuto', players: [] };
+    return <span className="text-gray-500 italic text-xs">TBD</span>;
   };
 
   const nonQualifiedTeams = tournament.groups.flatMap(g => g.teams).filter(t => !bracketMatches.some(m => m.team1Id === t.id || m.team2Id === t.id));
@@ -129,8 +135,10 @@ export function KnockoutBracket({ tournament, isAdmin, onScheduleUpdate }: { tou
 
             <LiveScore
               match={selectedMatch}
-              team1Name={getTeamDisplay(selectedMatch.team1Id, selectedMatch.id, 'team1Id', false) as string}
-              team2Name={getTeamDisplay(selectedMatch.team2Id, selectedMatch.id, 'team2Id', false) as string}
+              team1Name={(getTeamDisplay(selectedMatch.team1Id, selectedMatch.id, 'team1Id', false, true) as any).name}
+              team1Players={(getTeamDisplay(selectedMatch.team1Id, selectedMatch.id, 'team1Id', false, true) as any).players}
+              team2Name={(getTeamDisplay(selectedMatch.team2Id, selectedMatch.id, 'team2Id', false, true) as any).name}
+              team2Players={(getTeamDisplay(selectedMatch.team2Id, selectedMatch.id, 'team2Id', false, true) as any).players}
               isAdmin={isAdmin}
               onUpdate={handleScoreUpdate}
               onScheduleUpdate={onScheduleUpdate}
