@@ -133,7 +133,9 @@ const TournamentView = () => {
                     key={match.id}
                     match={match}
                     team1Name={team1.name}
+                    team1Players={team1.players}
                     team2Name={team2.name}
+                    team2Players={team2.players}
                     groupName={group?.name}
                     isAdmin={isAdmin}
                     onUpdate={handleScoreUpdate}
