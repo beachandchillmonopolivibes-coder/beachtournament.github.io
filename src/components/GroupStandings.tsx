@@ -22,7 +22,16 @@ const GroupStandings = ({ group }: GroupStandingsProps) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[rgba(255,255,255,0.05)]">
-            {group.teams.map((team, index) => (
+            {[...group.teams].sort((a, b) => {
+              if (b.points !== a.points) return b.points - a.points;
+              if (b.setsWon !== a.setsWon) return b.setsWon - a.setsWon;
+
+              const diffA = a.totalPointsScored - a.totalPointsConceded;
+              const diffB = b.totalPointsScored - b.totalPointsConceded;
+              if (diffB !== diffA) return diffB - diffA;
+
+              return a.name.localeCompare(b.name);
+            }).map((team, index) => (
               <tr key={team.id} className="hover:bg-[#1f2833] transition-colors">
                 <td className="py-3 px-4 font-bold text-white flex items-center gap-3">
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index < 2 ? 'bg-neon-orange text-[#0b0c10]' : 'bg-gray-800'}`}>
