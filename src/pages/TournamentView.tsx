@@ -112,7 +112,7 @@ const TournamentView = () => {
         {activeTab === 'standings' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {currentTournament.groups.map(group => (
-              <GroupStandings key={group.id} group={group} />
+              <GroupStandings key={group.id} group={group} isEditingEnabled={isAdmin} />
             ))}
           </div>
         )}
