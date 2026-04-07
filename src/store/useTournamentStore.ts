@@ -88,6 +88,7 @@ interface TournamentState {
   generateKnockoutBracket: (tournamentId: string) => Promise<void>;
   archiveTournament: (tournamentId: string) => Promise<void>;
   setManualKnockoutTeam: (matchId: string, teamId: string, slot: 'team1Id' | 'team2Id') => Promise<void>;
+  updateTeamDetails: (tournamentId: string, groupId: string, teamId: string, newName: string, newPlayers: string[]) => Promise<void>;
 }
 
 export const useTournamentStore = create<TournamentState>((set, get) => ({
@@ -762,5 +763,45 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
     }
 
     await batch.commit();
+  },
+
+  updateTeamDetails: async (tournamentId, groupId, teamId, newName, newPlayers) => {
+    const state = get();
+    const tournament = state.currentTournament;
+    if (!tournament || tournament.id !== tournamentId) return;
+
+    const groupIndex = tournament.groups.findIndex(g => g.id === groupId);
+    if (groupIndex === -1) return;
+
+    const group = tournament.groups[groupIndex];
+    const teamIndex = group.teams.findIndex(t => t.id === teamId);
+    if (teamIndex === -1) return;
+
+    // Create a deep copy of the groups to modify
+    const newGroups = JSON.parse(JSON.stringify(tournament.groups));
+
+    // Update the specific team's details
+    newGroups[groupIndex].teams[teamIndex].name = newName;
+    newGroups[groupIndex].teams[teamIndex].players = newPlayers;
+
+    const batch = writeBatch(db);
+    const tournamentRef = doc(db, 'tournaments', tournamentId);
+
+    // Update private doc
+    batch.update(tournamentRef, {
+        groups: newGroups
+    });
+
+    // Update public API doc
+    const publicRef = doc(db, 'public_tournaments', tournament.apiKey);
+    const publicDoc = await getDoc(publicRef);
+    if (publicDoc.exists()) {
+        batch.update(publicRef, {
+            groups: newGroups
+        });
+    }
+
+    await batch.commit();
+    // Let the firestore listener naturally update local state, or optionally we could aggressively update local state here
   }
 }));
